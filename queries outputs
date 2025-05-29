@@ -1,0 +1,157 @@
+Last login: Thu May 29 10:27:09 on ttys000
+kalyanthammarapu@kalyans-MacBook-Air ~ % /usr/local/mysql/bin/mysql -u root -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 9
+Server version: 9.3.0 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> create DATABASE ecommerce;
+Query OK, 1 row affected (0.009 sec)
+
+mysql> USE ecommerce;
+Database changed
+mysql> CREATE TABLE customers(
+    -> id INT PRIMARY KEY,
+    -> name VARCHAR(50)
+    -> country VARCHAR(50)
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'country VARCHAR(50)
+)' at line 4
+mysql> CREATE TABLE customers (
+    ->   id INT PRIMARY KEY,
+    ->   name VARCHAR(50),
+    ->   country VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.009 sec)
+
+mysql> 
+mysql> CREATE TABLE orders (
+    ->   id INT PRIMARY KEY,
+    ->   customer_id INT,
+    ->   amount DECIMAL(10,2),
+    ->   order_date DATE,
+    ->   FOREIGN KEY (customer_id) REFERENCES customers(id)
+    -> );
+Query OK, 0 rows affected (0.010 sec)
+
+mysql> 
+mysql> INSERT INTO customers VALUES
+    -> (1, 'Alice', 'USA'),
+    -> (2, 'Bob', 'Canada'),
+    -> (3, 'Charlie', 'USA');
+Query OK, 3 rows affected (0.005 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> 
+mysql> INSERT INTO orders VALUES
+    -> (101, 1, 250.00, '2024-01-15'),
+    -> (102, 2, 150.00, '2024-01-17'),
+    -> (103, 1, 300.00, '2024-02-01'),
+    -> (104, 3, 120.00, '2024-03-05');
+Query OK, 4 rows affected (0.001 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> SELECT * FROM customers WHERE country = 'USA'
+    -> SELECT customer_id, SUM(amount) AS total_spent
+    -> FROM orders
+    -> GROUP BY customer_id;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELECT customer_id, SUM(amount) AS total_spent
+FROM orders
+GROUP BY customer_id' at line 2
+mysql> -- 1. Customers from USA
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> SELECT * FROM customers WHERE country = 'USA';
++----+---------+---------+
+| id | name    | country |
++----+---------+---------+
+|  1 | Alice   | USA     |
+|  3 | Charlie | USA     |
++----+---------+---------+
+2 rows in set (0.001 sec)
+
+mysql> 
+mysql> -- 2. Total revenue per customer
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> SELECT customer_id, SUM(amount) AS total_spent
+    -> FROM orders
+    -> GROUP BY customer_id;
++-------------+-------------+
+| customer_id | total_spent |
++-------------+-------------+
+|           1 |      550.00 |
+|           2 |      150.00 |
+|           3 |      120.00 |
++-------------+-------------+
+3 rows in set (0.001 sec)
+
+mysql> 
+mysql> -- 3. Average order value
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> SELECT AVG(amount) AS average_order FROM orders;
++---------------+
+| average_order |
++---------------+
+|    205.000000 |
++---------------+
+1 row in set (0.000 sec)
+
+mysql> 
+mysql> -- 4. Join customer and orders
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> SELECT c.name, o.amount, o.order_date
+    -> FROM customers c
+    -> JOIN orders o ON c.id = o.customer_id;
++---------+--------+------------+
+| name    | amount | order_date |
++---------+--------+------------+
+| Alice   | 250.00 | 2024-01-15 |
+| Alice   | 300.00 | 2024-02-01 |
+| Bob     | 150.00 | 2024-01-17 |
+| Charlie | 120.00 | 2024-03-05 |
++---------+--------+------------+
+4 rows in set (0.000 sec)
+
+mysql> 
+mysql> -- 5. Subquery: Customers with total spend > 200
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> SELECT * FROM customers
+    -> WHERE id IN (
+    ->   SELECT customer_id FROM orders GROUP BY customer_id HAVING SUM(amount) > 200
+    -> );
++----+-------+---------+
+| id | name  | country |
++----+-------+---------+
+|  1 | Alice | USA     |
++----+-------+---------+
+1 row in set (0.002 sec)
+
+mysql> 
+mysql> -- 6. Create a view
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> CREATE VIEW usa_customers AS
+    -> SELECT * FROM customers WHERE country = 'USA';
+Query OK, 0 rows affected (0.002 sec)
+
+mysql> 
+mysql> -- 7. Create an index
+Query OK, 0 rows affected (0.000 sec)
+
+mysql> CREATE INDEX idx_order_customer ON orders(customer_id);
+Query OK, 0 rows affected (0.013 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> 
